@@ -30,7 +30,7 @@ services:
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
     command: >
-          sh -c "kafka-topics.sh --create --topic test-events --zookeeper zookeeper:2181 --partitions 2 --replication-factor 1"
+          sh -c "sleep 10 && kafka-topics.sh --create --topic test-events --zookeeper zookeeper:2181 --partitions 1 --replication-factor 1"
     networks:
       - app_dev
     volumes:
