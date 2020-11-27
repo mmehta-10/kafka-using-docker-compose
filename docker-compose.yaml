@@ -19,7 +19,7 @@ services:
     networks:
       - app_dev
     volumes:
-      - 'kafka1_data:/bitnami/kafka'
+      - '/tmp/kafka1_data:/bitnami/kafka'
     depends_on:
       - zookeeper
   kafka-2:
@@ -32,15 +32,15 @@ services:
     networks:
       - app_dev
     volumes:
-      - 'kafka2_data:/bitnami/kafka'
+      - '/tmp/kafka2_data:/bitnami/kafka'
     depends_on:
       - zookeeper
 
-volumes:
-  kafka1_data:
-    driver: local   
-  kafka2_data:
-    driver: local
+# volumes:
+#   kafka1_data:
+#     driver: local   
+#   kafka2_data:
+#     driver: local
     
 networks:
   app_dev:
