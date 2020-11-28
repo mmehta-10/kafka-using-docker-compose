@@ -12,10 +12,18 @@ services:
   kafka-1:
     image: 'docker.io/bitnami/kafka:2-debian-10'
     ports:
-      - '9092'
+      - '9092'  # for docker network
+      - '30001:9093'  # for connections from localhost i.e. machine where containers are running
+      - '39093:39093'   # from external network
     environment:
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_LISTENERS=CLIENT://kafka-1:9092,LOCAL://kafka-1:9093,EXTERNAL://kafka-1:39093
+      #- KAFKA_CFG_LISTENERS=CLIENT://kafka-1:9092,LOCAL://localhost:9093,EXTERNAL://kafka-dns:39093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka-1:9092,LOCAL://localhost:9093,EXTERNAL://${HOSTIP}:39093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,LOCAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
+#      - KAFKA_CFG_SOCKET_REQUEST_MAX_BYTES=5242880000
     networks:
       - app_dev
     volumes:
@@ -25,7 +33,30 @@ services:
   kafka-2:
     image: 'docker.io/bitnami/kafka:2-debian-10'
     ports:
+      - '9092'  # for docker network
+      - '30002:9094'  # for connections from localhost i.e. machine where containers are running
+      - '39094:39094'    # from external network
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_LISTENERS=CLIENT://kafka-2:9092,LOCAL://kafka-2:9094,EXTERNAL://kafka-2:39094
+      #- KAFKA_CFG_LISTENERS=CLIENT://kafka-2:9092,LOCAL://localhost:9094,EXTERNAL://kafka-dns:39094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka-2:9092,LOCAL://localhost:9094,,EXTERNAL://${HOSTIP}:39094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,LOCAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
+#      - KAFKA_CFG_SOCKET_REQUEST_MAX_BYTES=5242880000
+    networks:
+      - app_dev
+    volumes:
+      - './kafka2_data:/bitnami/kafka'
+    depends_on:
+      - zookeeper
+  # This kafka broker is only used to create a topic on startup. It will EXIT after after that. Only kafka-1 and kafka-2 brokers remain UP.
+  kafka-3:
+    image: 'docker.io/bitnami/kafka:2-debian-10'
+    ports:
       - '9092'
+      - '9093'
     environment:
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
@@ -33,16 +64,8 @@ services:
           sh -c "sleep 10 && kafka-topics.sh --create --topic test-events --zookeeper zookeeper:2181 --partitions 1 --replication-factor 1"
     networks:
       - app_dev
-    volumes:
-      - './kafka2_data:/bitnami/kafka'
     depends_on:
       - zookeeper
-
-# volumes:
-#   kafka1_data:
-#     driver: local   
-#   kafka2_data:
-#     driver: local
     
 networks:
   app_dev:
